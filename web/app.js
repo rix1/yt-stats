@@ -12,17 +12,26 @@ const input   = $("file-input");
 const overlay = $("drag-overlay");
 
 // ── Drag and drop ─────────────────────────────────────────────────────────
+// We always preventDefault on drag* so the browser never tries to
+// navigate to dropped files. `dataTransfer.types` is a DOMStringList in
+// some browsers, so don't call .includes on it — just inspect the drop.
 let dragDepth = 0;
+const hasFiles = (e) => {
+  const t = e.dataTransfer?.types;
+  if (!t) return false;
+  for (let i = 0; i < t.length; i++) if (t[i] === "Files") return true;
+  return false;
+};
 window.addEventListener("dragenter", (e) => {
-  if (!e.dataTransfer?.types?.includes("Files")) return;
+  if (!hasFiles(e)) return;
   e.preventDefault();
   dragDepth++;
   overlay.classList.add("is-on");
 });
 window.addEventListener("dragover", (e) => {
-  if (!e.dataTransfer?.types?.includes("Files")) return;
+  if (!hasFiles(e)) return;
   e.preventDefault();
-  e.dataTransfer.dropEffect = "copy";
+  if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
 });
 window.addEventListener("dragleave", () => {
   dragDepth = Math.max(0, dragDepth - 1);
@@ -36,7 +45,11 @@ window.addEventListener("drop", (e) => {
   if (file) handleFile(file);
 });
 
-dz.addEventListener("click", () => input.click());
+// The dropzone is a <label> wrapping the file input. The browser
+// natively forwards clicks on the label to the input — do NOT add a
+// JS click handler that calls input.click() again, or the picker
+// will open twice (visible as "selecting a file just re-opens the
+// picker"). Only handle keyboard activation explicitly.
 dz.addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); }
 });
@@ -85,6 +98,11 @@ async function handleFile(file) {
       el.style.animation = "";
     });
     renderReport(stats);
+    // Scroll into the report so it's obvious the file loaded — it can
+    // otherwise render below the fold and look like nothing happened.
+    requestAnimationFrame(() => {
+      report.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   } catch (err) {
     loading.hidden = true;
     landing.hidden = false;
