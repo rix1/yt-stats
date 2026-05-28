@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>Watch History — your YouTube, in numbers</title>
+  <meta name="description" content="A private, client-side report of your YouTube watch history. No servers. No telemetry. Drop the file, see the years." />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ef4444'/%3E%3Cpath d='M13 11l8 5-8 5z' fill='white'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="./index.html">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">watch-history</span>
+    </a>
+    <nav>
+      <a href="./about.html" class="nav-link">About &amp; privacy</a>
+    </nav>
+  </header>
+
+  <main id="app">
+    <!-- Landing -->
+    <section id="landing" class="landing">
+      <div class="landing-inner">
+        <p class="eyebrow">100% client-side · no servers · no telemetry</p>
+        <h1 class="hero-title">
+          Your YouTube,<br />
+          <span class="hero-grad">in numbers.</span>
+        </h1>
+        <p class="hero-sub">
+          Drop your <code>watch-history.json</code> below. Everything runs in your browser — the file never leaves this tab.
+        </p>
+
+        <label id="dropzone" class="dropzone" tabindex="0">
+          <input id="file-input" type="file" accept="application/json,.json" hidden />
+          <div class="dropzone-inner">
+            <div class="dropzone-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v12" /><path d="m7 8 5-5 5 5" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+              </svg>
+            </div>
+            <div class="dropzone-text">
+              <strong>Drop watch-history.json</strong>
+              <span>or click to choose a file</span>
+            </div>
+          </div>
+          <div class="dropzone-glow" aria-hidden="true"></div>
+        </label>
+
+        <p class="hint">
+          Don't have the file yet? <a href="./about.html#takeout">Get it from Google Takeout</a> in ~5 minutes.
+        </p>
+      </div>
+      <div class="landing-bg" aria-hidden="true"></div>
+    </section>
+
+    <!-- Loading -->
+    <section id="loading" class="loading" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <p id="loading-text">Parsing…</p>
+    </section>
+
+    <!-- Report -->
+    <section id="report" class="report" hidden>
+      <div class="report-header reveal">
+        <div>
+          <p class="eyebrow">Personal report</p>
+          <h2 id="report-range" class="report-title"></h2>
+        </div>
+        <button id="reset-btn" class="ghost-btn" type="button">Load a different file</button>
+      </div>
+
+      <div id="summary" class="summary reveal"></div>
+
+      <section class="block reveal">
+        <h3 class="block-title">Year &times; month</h3>
+        <p class="block-sub">How your watching has trended over the years.</p>
+        <div id="ym-grid" class="ym-grid"></div>
+      </section>
+
+      <section class="block reveal">
+        <h3 class="block-title">Daily heatmap</h3>
+        <p class="block-sub" id="heatmap-sub">Last 53 weeks. Each square is a day.</p>
+        <div id="heatmap" class="heatmap-wrap"></div>
+      </section>
+
+      <section class="block reveal">
+        <h3 class="block-title">When do you watch?</h3>
+        <p class="block-sub">Hour-of-day &times; day-of-week, in your local time.</p>
+        <div id="hourdow" class="hourdow-wrap"></div>
+      </section>
+
+      <section class="two-col">
+        <section class="block reveal">
+          <h3 class="block-title">Top channels — all time</h3>
+          <ol id="top-channels" class="channel-list"></ol>
+        </section>
+        <section class="block reveal">
+          <h3 class="block-title">Top channels — last 90 days</h3>
+          <ol id="top-channels-90" class="channel-list"></ol>
+        </section>
+      </section>
+
+      <section class="block reveal">
+        <h3 class="block-title">Most rewatched videos</h3>
+        <p class="block-sub" id="rewatched-sub"></p>
+        <ol id="rewatched-list" class="rewatched-list"></ol>
+      </section>
+
+      <section class="block reveal">
+        <h3 class="block-title">Play-count distribution</h3>
+        <p class="block-sub">How often you come back to the same video.</p>
+        <div id="play-buckets" class="play-buckets"></div>
+      </section>
+
+      <section class="block reveal">
+        <h3 class="block-title">Streaks &amp; extras</h3>
+        <div id="extras" class="extras"></div>
+      </section>
+
+      <footer class="report-footer">
+        <p>Generated in your browser · nothing was uploaded · <a href="./about.html">how this works</a></p>
+      </footer>
+    </section>
+  </main>
+
+  <!-- Full-page drag overlay -->
+  <div id="drag-overlay" class="drag-overlay" aria-hidden="true">
+    <div class="drag-overlay-inner">
+      <div class="drag-overlay-ring"></div>
+      <p>Drop to analyze</p>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>About &amp; privacy — watch-history</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ef4444'/%3E%3Cpath d='M13 11l8 5-8 5z' fill='white'/%3E%3C/svg%3E" />
+</head>
+<body class="about-body">
+  <header class="nav">
+    <a class="brand" href="./index.html">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">watch-history</span>
+    </a>
+    <nav>
+      <a href="./index.html" class="nav-link">&larr; Back to report</a>
+    </nav>
+  </header>
+
+  <main class="about-main">
+    <article class="prose">
+      <p class="eyebrow">About</p>
+      <h1>This tool runs entirely in your browser.</h1>
+
+      <section class="callout">
+        <div class="callout-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        </div>
+        <div>
+          <h2 class="callout-title">Your data never leaves this tab</h2>
+          <ul class="callout-list">
+            <li><strong>No server.</strong> The page is static HTML/CSS/JS. There is no backend to send data to.</li>
+            <li><strong>No telemetry.</strong> No analytics, no tracking pixels, no cookies, no fonts loaded from a CDN.</li>
+            <li><strong>No network requests at all</strong> while you use the app — open your browser's Network tab and watch.</li>
+            <li><strong>Parsing happens locally.</strong> Your <code>watch-history.json</code> is read with the browser's File API and processed in memory.</li>
+            <li><strong>Refresh = gone.</strong> Nothing is persisted; reloading the page wipes the report.</li>
+          </ul>
+        </div>
+      </section>
+
+      <h2 id="takeout">How to get your watch-history.json</h2>
+      <p>Google bundles your YouTube history into a download via <a href="https://takeout.google.com/" target="_blank" rel="noopener noreferrer">Google Takeout</a>. It usually takes a few minutes to an hour, depending on how much data you have.</p>
+
+      <ol class="steps">
+        <li>
+          <span class="step-num">1</span>
+          <div>
+            <h3>Open Google Takeout</h3>
+            <p>Visit <a href="https://takeout.google.com/" target="_blank" rel="noopener noreferrer">takeout.google.com</a> while signed in to the Google account you use for YouTube.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <div>
+            <h3>Deselect everything, then select only "YouTube and YouTube Music"</h3>
+            <p>Click <em>Deselect all</em> at the top of the product list, scroll down, and tick only the YouTube box. This keeps the download small.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <div>
+            <h3>Narrow the content to just history</h3>
+            <p>Click <em>All YouTube data included</em>. In the modal: <em>Deselect all</em>, then tick only <strong>history</strong>. Choose <strong>JSON</strong> as the format (the default is HTML — change it).</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">4</span>
+          <div>
+            <h3>Create the export</h3>
+            <p>Pick <em>Send download link via email</em>, one-time export, .zip format. Click <em>Create export</em>.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">5</span>
+          <div>
+            <h3>Download and unzip</h3>
+            <p>When the email arrives, download the archive and unzip it. You'll find <code>watch-history.json</code> at <code>Takeout/YouTube and YouTube Music/history/watch-history.json</code>.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">6</span>
+          <div>
+            <h3>Drop the file</h3>
+            <p>Head back to <a href="./index.html">the home page</a> and drop the file. Your report appears immediately.</p>
+          </div>
+        </li>
+      </ol>
+
+      <h2>What gets counted</h2>
+      <p>The report uses only the <code>"Watched …"</code> entries from your history. Ads, posts, and YouTube Music entries are filtered out. Channel names come from the entry's first subtitle; if a video was removed or the channel was deleted, it shows as <em>(unknown / removed)</em>.</p>
+
+      <h2>About the channel avatars</h2>
+      <p>The colorful circles next to channel names are generated deterministically from the channel's name — same name, same colors. They aren't fetched from YouTube; doing that would require network requests and break the "nothing leaves this tab" guarantee.</p>
+
+      <h2>Found a bug or want to read the code?</h2>
+      <p>It's a small, dependency-free project: one HTML file, one stylesheet, one core module, one renderer. View source to read it all.</p>
+
+      <p class="back"><a href="./index.html">&larr; Back to the report</a></p>
+    </article>
+  </main>
+</body>
+</html>
