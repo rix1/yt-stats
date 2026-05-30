@@ -1,0 +1,53 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "core.js"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deploy at a time; let an in-progress one finish so we don't
+# leave the site in a half-deployed state.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble _site
+        # cp -RL dereferences web/core.js (a symlink to ../core.js) into a
+        # real file inside the publishing root. The site must be self-
+        # contained — nothing outside _site/ is uploaded.
+        run: |
+          mkdir -p _site
+          cp -RL web/. _site/
+          echo 'yt-stats.rix1.dev' > _site/CNAME
+          # Belt-and-braces: tell Pages to skip Jekyll, since we ship raw
+          # static files via the upload-pages-artifact action.
+          touch _site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
