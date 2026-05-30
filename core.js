@@ -53,6 +53,22 @@ export function parseEntries(raw) {
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+/** @param {string} url */
+export function videoIdFromUrl(url) {
+  if (!url) return "";
+  const m = url.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : "";
+}
+
+/** @param {Map<string, number>} vids */
+function topVideoId(vids) {
+  let best = "", bestCount = 0;
+  for (const [id, c] of vids) {
+    if (c > bestCount) { best = id; bestCount = c; }
+  }
+  return best;
+}
+
 /**
  * @param {Watch[]} watches
  * @param {{ skippedMusic?: number, skippedNoTime?: number, tz?: 'local'|'utc' }} [meta]
@@ -120,29 +136,41 @@ export function computeStats(watches, meta = {}) {
   const maxHourDow = Math.max(0, ...hourDow.flat());
 
   // ── channels ─────────────────────────────────────────────────────────────
-  /** @type {Map<string, {count: number, url: string}>} */
+  // Track the most-watched video per channel so the web UI can use its
+  // thumbnail as a stand-in avatar (i.ytimg.com hotlinks need no API key).
+  /** @type {Map<string, {count: number, url: string, vids: Map<string, number>}>} */
   const chMap = new Map();
   for (const w of realWatches) {
-    const cur = chMap.get(w.channel);
-    if (cur) cur.count++;
-    else chMap.set(w.channel, { count: 1, url: w.channelUrl });
+    let cur = chMap.get(w.channel);
+    if (!cur) {
+      cur = { count: 0, url: w.channelUrl, vids: new Map() };
+      chMap.set(w.channel, cur);
+    }
+    cur.count++;
+    const vid = videoIdFromUrl(w.url);
+    if (vid) cur.vids.set(vid, (cur.vids.get(vid) ?? 0) + 1);
   }
   const topChannels = [...chMap.entries()]
-    .map(([name, v]) => ({ name, count: v.count, url: v.url }))
+    .map(([name, v]) => ({ name, count: v.count, url: v.url, videoId: topVideoId(v.vids) }))
     .sort((a, b) => b.count - a.count);
 
   // ── channels last 90 days ────────────────────────────────────────────────
   const cutoff = new Date(last.getTime() - 90 * 86400000);
-  /** @type {Map<string, {count: number, url: string}>} */
+  /** @type {Map<string, {count: number, url: string, vids: Map<string, number>}>} */
   const ch90 = new Map();
   for (const w of realWatches) {
     if (w.date < cutoff) continue;
-    const cur = ch90.get(w.channel);
-    if (cur) cur.count++;
-    else ch90.set(w.channel, { count: 1, url: w.channelUrl });
+    let cur = ch90.get(w.channel);
+    if (!cur) {
+      cur = { count: 0, url: w.channelUrl, vids: new Map() };
+      ch90.set(w.channel, cur);
+    }
+    cur.count++;
+    const vid = videoIdFromUrl(w.url);
+    if (vid) cur.vids.set(vid, (cur.vids.get(vid) ?? 0) + 1);
   }
   const topChannels90d = [...ch90.entries()]
-    .map(([name, v]) => ({ name, count: v.count, url: v.url }))
+    .map(([name, v]) => ({ name, count: v.count, url: v.url, videoId: topVideoId(v.vids) }))
     .sort((a, b) => b.count - a.count);
 
   // ── rewatched ────────────────────────────────────────────────────────────

@@ -1,5 +1,7 @@
-// watch-history web app — all client-side. No network requests.
-import { parseEntries, computeStats, FORMAT } from "./core.js";
+// watch-history web app — all client-side. The only outbound requests
+// are <img> hotlinks to i.ytimg.com for channel/video thumbnails. No JSON
+// APIs, no keys, no tracking endpoints.
+import { parseEntries, computeStats, FORMAT, videoIdFromUrl } from "./core.js";
 
 // ── DOM refs ──────────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
@@ -112,7 +114,12 @@ async function handleFile(file) {
 
 const raf = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-// ── Channel avatars (deterministic, no network) ───────────────────────────
+// ── Channel avatars ───────────────────────────────────────────────────────
+// We don't have the channel's real avatar hash without a network round-trip
+// or an API key, so use the thumbnail of a representative video as a
+// stand-in. i.ytimg.com hotlinks need no key and no JSON handshake.
+// Fallback: a deterministic initials gradient if there's no video id or
+// the image fails to load.
 function hash32(s) {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
@@ -124,16 +131,33 @@ const initials = (name) => {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
-function avatar(name) {
+function fallbackBg(name) {
   const h = hash32(name);
   const h1 = h % 360;
   const h2 = (h1 + 35 + ((h >> 9) % 60)) % 360;
   const s1 = 55 + (h >> 17) % 25;
   const l1 = 42 + (h >> 21) % 14;
-  return {
-    bg: `linear-gradient(135deg, hsl(${h1}deg ${s1}% ${l1}%), hsl(${h2}deg ${s1 - 8}% ${l1 - 12}%))`,
-    text: initials(name),
-  };
+  return `linear-gradient(135deg, hsl(${h1}deg ${s1}% ${l1}%), hsl(${h2}deg ${s1 - 8}% ${l1 - 12}%))`;
+}
+function avatarEl(name, videoId) {
+  const wrap = el("div", {
+    class: "avatar",
+    style: { background: fallbackBg(name) },
+  }, el("span", { class: "avatar-initials" }, initials(name)));
+  if (videoId) {
+    // mqdefault is 320×180 with no letterboxing; default.jpg has black bars.
+    const img = el("img", {
+      class: "avatar-img",
+      src: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+      alt: "",
+      loading: "lazy",
+      decoding: "async",
+      referrerpolicy: "no-referrer",
+      onerror: () => img.remove(),
+    });
+    wrap.appendChild(img);
+  }
+  return wrap;
 }
 
 // ── Tooltip ───────────────────────────────────────────────────────────────
@@ -360,8 +384,7 @@ function renderTopChannels(targetId, list) {
   if (list.length === 0) { wrap.appendChild(el("li", {}, "(none)")); return; }
   const max = list[0].count;
   for (const ch of list) {
-    const av = avatar(ch.name);
-    const avEl = el("div", { class: "avatar", style: { background: av.bg } }, av.text);
+    const avEl = avatarEl(ch.name, ch.videoId);
     const fill = el("span", { class: "channel-bar-fill" });
     const nameNode = ch.url
       ? el("a", { href: ch.url, target: "_blank", rel: "noopener noreferrer" }, ch.name)
@@ -387,8 +410,7 @@ function renderRewatched(stats) {
     : "No rewatches found.";
 
   for (const r of list) {
-    const av = avatar(r.channel);
-    const avEl = el("div", { class: "avatar", style: { background: av.bg } }, av.text);
+    const avEl = avatarEl(r.channel, videoIdFromUrl(r.url));
     const titleNode = r.url
       ? el("a", { href: r.url, target: "_blank", rel: "noopener noreferrer" }, r.title)
       : document.createTextNode(r.title);
