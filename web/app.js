@@ -465,27 +465,105 @@ function renderRewatched(stats) {
 }
 
 function renderPlayBuckets(stats) {
-  const wrap = $("play-buckets");
-  wrap.innerHTML = "";
+  const host = $("play-buckets");
+  host.innerHTML = "";
   const buckets = stats.playCountBuckets;
-  const totalVideos = buckets.reduce((s, r) => s + r.videos, 0);
-  const totalPlays  = stats.summary.watched;
+  const totalPlays = stats.summary.watched;
   const maxV = Math.max(...buckets.map((r) => r.videos));
 
-  for (const b of buckets) {
+  const master = el("ul", { class: "play-master" });
+  const detail = el("div", { class: "play-detail" });
+  const hint = el("p", { class: "play-detail-hint" }, "Click a bucket to see videos.");
+  detail.appendChild(hint);
+
+  const rows = [];
+  let selectedIdx = -1;
+
+  buckets.forEach((b, idx) => {
     const fill = el("span", { class: "bucket-bar-fill" });
-    const pctV = totalVideos ? (b.videos / totalVideos * 100) : 0;
-    const pctP = totalPlays  ? (b.plays  / totalPlays  * 100) : 0;
-    wrap.appendChild(el("div", { class: "bucket-row" },
+    const pctP = totalPlays ? (b.plays / totalPlays * 100) : 0;
+    const row = el("li", {
+      class: "bucket-row" + (b.videos === 0 ? " is-empty" : ""),
+      role: "button",
+      tabindex: b.videos === 0 ? "-1" : "0",
+      "aria-pressed": "false",
+    },
       el("div", { class: "bucket-label" }, b.label),
       el("div", { class: "bucket-bar" }, fill),
       el("div", { class: "bucket-num" },
         el("strong", {}, fmtNum(b.videos)),
         document.createTextNode(` videos · ${pctP.toFixed(1)}% of plays`),
       ),
-    ));
+    );
+    if (b.videos > 0) {
+      const onActivate = () => selectBucket(idx);
+      row.addEventListener("click", onActivate);
+      row.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onActivate(); }
+      });
+    }
+    rows.push(row);
+    master.appendChild(row);
     requestAnimationFrame(() => { fill.style.width = `${maxV ? (b.videos / maxV) * 100 : 0}%`; });
+  });
+
+  function selectBucket(idx) {
+    if (selectedIdx === idx) {
+      // toggle off
+      rows[idx].classList.remove("is-selected");
+      rows[idx].setAttribute("aria-pressed", "false");
+      selectedIdx = -1;
+      detail.innerHTML = "";
+      detail.appendChild(hint);
+      return;
+    }
+    if (selectedIdx >= 0) {
+      rows[selectedIdx].classList.remove("is-selected");
+      rows[selectedIdx].setAttribute("aria-pressed", "false");
+    }
+    selectedIdx = idx;
+    rows[idx].classList.add("is-selected");
+    rows[idx].setAttribute("aria-pressed", "true");
+    renderBucketDetail(detail, buckets[idx]);
   }
+
+  host.appendChild(el("div", { class: "play-master-detail" }, master, detail));
+}
+
+function renderBucketDetail(panel, bucket) {
+  panel.innerHTML = "";
+  const truncated = bucket.videos > bucket.items.length;
+  panel.appendChild(el("div", { class: "play-detail-head" },
+    el("h3", { class: "play-detail-title" }, bucket.label),
+    el("p", { class: "play-detail-sub" },
+      `${fmtNum(bucket.videos)} video${bucket.videos === 1 ? "" : "s"} · ${fmtNum(bucket.plays)} play${bucket.plays === 1 ? "" : "s"}` +
+      (truncated ? ` · showing top ${fmtNum(bucket.items.length)}` : ""),
+    ),
+  ));
+
+  if (bucket.items.length === 0) {
+    panel.appendChild(el("p", { class: "play-detail-hint" }, "No videos in this bucket."));
+    return;
+  }
+
+  const list = el("ol", { class: "play-detail-list" });
+  for (const v of bucket.items) {
+    const titleNode = v.url
+      ? el("a", { href: v.url, target: "_blank", rel: "noopener noreferrer" }, v.title)
+      : document.createTextNode(v.title);
+    const chanNode = v.channelUrl
+      ? el("a", { href: v.channelUrl, target: "_blank", rel: "noopener noreferrer" }, v.channel)
+      : document.createTextNode(v.channel);
+    list.appendChild(el("li", { class: "play-detail-row" },
+      el("div", { class: "play-detail-count" }, fmtNum(v.count)),
+      avatarEl(v.channel, videoIdFromUrl(v.url)),
+      el("div", { class: "play-detail-meta" },
+        el("div", { class: "play-detail-vtitle" }, titleNode),
+        el("div", { class: "play-detail-channel" }, chanNode),
+      ),
+    ));
+  }
+  panel.appendChild(list);
 }
 
 function renderExtras(stats) {

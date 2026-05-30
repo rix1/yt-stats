@@ -204,12 +204,23 @@ export function computeStats(watches, meta = {}) {
     { label: "26–50 plays",            min: 26, max: 50 },
     { label: "51+ plays",              min: 51, max: Infinity },
   ];
+  const ITEM_CAP = 500;
   const playCountBuckets = bucketDefs.map((b) => {
-    let videos = 0, plays = 0;
+    const matching = [];
     for (const r of rewMap.values()) {
-      if (r.count >= b.min && r.count <= b.max) { videos++; plays += r.count; }
+      if (r.count >= b.min && r.count <= b.max) matching.push(r);
     }
-    return { ...b, videos, plays };
+    matching.sort((a, b) => b.count - a.count || b.last.getTime() - a.last.getTime());
+    const plays = matching.reduce((s, r) => s + r.count, 0);
+    return {
+      ...b,
+      videos: matching.length,
+      plays,
+      items: matching.slice(0, ITEM_CAP).map((r) => ({
+        title: r.title, channel: r.channel, channelUrl: r.channelUrl,
+        url: r.url, count: r.count, last: r.last,
+      })),
+    };
   });
 
   // ── streaks & extras ─────────────────────────────────────────────────────
