@@ -221,7 +221,7 @@ function renderReport(stats) {
   const s = stats.summary;
 
   $("report-range").textContent =
-    `${FORMAT.isoDate(s.first)} → ${FORMAT.isoDate(s.last)} · ${fmtNum(s.daysSpan)} days`;
+    `${FORMAT.niceDate(s.first)} → ${FORMAT.niceDate(s.last)} · ${fmtNum(s.daysSpan)} days`;
 
   renderSummary(stats);
   renderYearMonth(stats);
@@ -424,7 +424,7 @@ function renderRewatched(stats) {
         el("div", { class: "rewatched-title" }, titleNode),
         el("div", { class: "rewatched-channel" }, chanNode),
       ),
-      el("div", { class: "rewatched-span" }, `${FORMAT.isoDate(r.first)} → ${FORMAT.isoDate(r.last)}`),
+      el("div", { class: "rewatched-span" }, `${FORMAT.niceDate(r.first)} → ${FORMAT.niceDate(r.last)}`),
     ));
   }
 }
@@ -460,12 +460,12 @@ function renderExtras(stats) {
     {
       label: "Busiest day",
       value: fmtNum(stats.streaks.busiestDay.count),
-      sub: stats.streaks.busiestDay.date,
+      sub: stats.streaks.busiestDay.date ? FORMAT.niceDate(stats.streaks.busiestDay.date, { weekday: true }) : "—",
     },
     {
       label: "Longest streak",
       value: fmtNum(stats.streaks.longestStreak.length),
-      sub: `ending ${stats.streaks.longestStreak.end}`,
+      sub: stats.streaks.longestStreak.end ? `ending ${FORMAT.niceDate(stats.streaks.longestStreak.end)}` : "—",
     },
     {
       label: "Days watched",

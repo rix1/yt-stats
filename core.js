@@ -256,4 +256,19 @@ export function computeStats(watches, meta = {}) {
 export const FORMAT = {
   isoDate: (d) => d.toISOString().slice(0, 10),
   months: MONTHS,
+  // Friendly localized date — accepts a Date or a "YYYY-MM-DD" string.
+  // Parsing the string by hand avoids the UTC midnight pitfall of
+  // `new Date("2024-05-20")`, which can shift a day in negative offsets.
+  niceDate: (input, opts = {}) => {
+    const d = typeof input === "string" ? parseDateKey(input) : input;
+    return d.toLocaleDateString(undefined, {
+      weekday: opts.weekday ? "short" : undefined,
+      year: "numeric", month: "short", day: "numeric",
+    });
+  },
 };
+
+function parseDateKey(s) {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+}
