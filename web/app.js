@@ -258,26 +258,39 @@ function renderSummary(stats) {
 
 function renderYearMonth(stats) {
   const ym = stats.yearMonth;
-  const wrap = $("ym-grid");
-  wrap.innerHTML = "";
+  const host = $("ym-grid");
+  host.innerHTML = "";
+
+  const grid = el("div", { class: "ym-grid-inner" });
 
   // header row
-  wrap.appendChild(el("div", { class: "ym-month" }, ""));
-  for (const m of ym.months) wrap.appendChild(el("div", { class: "ym-month" }, m));
-  wrap.appendChild(el("div", { class: "ym-month" }, "Total"));
+  grid.appendChild(el("div", { class: "ym-month" }, ""));
+  for (const m of ym.months) grid.appendChild(el("div", { class: "ym-month" }, m));
+  grid.appendChild(el("div", { class: "ym-month" }, "Total"));
 
   for (const y of ym.years) {
-    wrap.appendChild(el("div", { class: "ym-label" }, y));
+    grid.appendChild(el("div", { class: "ym-label" }, y));
     for (let i = 0; i < 12; i++) {
       const v = ym.data[y][i];
       const cell = el("div", { class: v === 0 ? "ym-cell empty" : "ym-cell" }, v === 0 ? "·" : String(v));
       const bg = ymBg(v, ym.max);
       if (bg) cell.style.background = bg;
       if (v > 0) attachTip(cell, `${ym.months[i]} ${y} · ${fmtNum(v)} videos`);
-      wrap.appendChild(cell);
+      grid.appendChild(cell);
     }
-    wrap.appendChild(el("div", { class: "ym-total" }, fmtNum(ym.totals[y])));
+    grid.appendChild(el("div", { class: "ym-total" }, fmtNum(ym.totals[y])));
   }
+
+  host.appendChild(grid);
+  host.appendChild(makeLegend({
+    peak: ym.max,
+    peakLabel: `peak ${fmtNum(ym.max)}/month`,
+    cells: [0, 0.2, 0.45, 0.7, 1].map((r) => ({
+      background: r === 0
+        ? "rgba(255,255,255,0.025)"
+        : `linear-gradient(180deg, rgba(239,68,68,${r * 0.85}), rgba(239,68,68,${r * 0.55}))`,
+    })),
+  }));
 }
 
 function renderDailyHeatmap(stats) {
@@ -376,6 +389,28 @@ function renderHourDow(stats) {
     }
   }
   wrap.appendChild(grid);
+
+  wrap.appendChild(makeLegend({
+    peak: max,
+    peakLabel: `peak ${fmtNum(max)}/hour`,
+    cells: ["empty", "l1", "l2", "l3", "l4"].map((cls) => ({ className: `hourdow-cell ${cls}` })),
+  }));
+}
+
+// Shared legend renderer for heatmap-style grids. Each cell can be styled
+// either by className (for the level-bucket grids) or by inline background
+// (for the opacity-gradient ym grid).
+function makeLegend({ peak, peakLabel, cells }) {
+  const cellNodes = cells.map((spec) => {
+    const node = el("span", spec.className ? { class: spec.className } : {});
+    if (spec.background) node.style.background = spec.background;
+    return node;
+  });
+  return el("div", { class: "heatmap-legend" },
+    el("span", {}, "less"),
+    el("div", { class: "heatmap-legend-cells" }, ...cellNodes),
+    el("span", {}, peak > 0 ? `more · ${peakLabel}` : "more"),
+  );
 }
 
 function renderTopChannels(targetId, list) {
