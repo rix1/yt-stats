@@ -35,7 +35,7 @@
           <ul class="callout-list">
             <li><strong>No server.</strong> The page is static HTML/CSS/JS. There is no backend to send data to.</li>
             <li><strong>No telemetry.</strong> No analytics, no tracking pixels, no cookies, no fonts loaded from a CDN.</li>
-            <li><strong>No network requests at all</strong> while you use the app — open your browser's Network tab and watch.</li>
+            <li><strong>No network requests by default</strong> while you use the app — open your browser's Network tab and watch. The one exception is opt-in: if you flip the <em>Thumbnails</em> switch in the report header, the page hotlinks YouTube video thumbnails from <code>i.ytimg.com</code> (no API, no key, no JSON — just images).</li>
             <li><strong>Parsing happens locally.</strong> Your <code>watch-history.json</code> is read with the browser's File API and processed in memory.</li>
             <li><strong>Refresh = gone.</strong> Nothing is persisted; reloading the page wipes the report.</li>
           </ul>
@@ -94,7 +94,8 @@
       <p>The report uses only the <code>"Watched …"</code> entries from your history. Ads, posts, and YouTube Music entries are filtered out. Channel names come from the entry's first subtitle; if a video was removed or the channel was deleted, it shows as <em>(unknown / removed)</em>.</p>
 
       <h2>About the channel avatars</h2>
-      <p>The colorful circles next to channel names are generated deterministically from the channel's name — same name, same colors. They aren't fetched from YouTube; doing that would require network requests and break the "nothing leaves this tab" guarantee.</p>
+      <p>By default, the colorful circles next to channel names are generated deterministically from the channel's name — same name, same colors. They aren't fetched from YouTube, so there are no network requests.</p>
+      <p>If you flip the <em>Thumbnails</em> switch in the report header, those circles get replaced with the thumbnail of each channel's most-watched video, hotlinked from <code>i.ytimg.com</code>. There's no API call and no key involved — your browser just loads each image directly, the same way it would on any other page that embeds a YouTube thumbnail. YouTube can see the request, so the toggle is off by default; the choice is yours.</p>
 
       <h2>Found a bug or want to read the code?</h2>
       <p>It's a small, dependency-free project: one HTML file, one stylesheet, one core module, one renderer. View source to read it all.</p>

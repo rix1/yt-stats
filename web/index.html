@@ -69,7 +69,14 @@
           <p class="eyebrow">Personal report</p>
           <h2 id="report-range" class="report-title"></h2>
         </div>
-        <button id="reset-btn" class="ghost-btn" type="button">Load a different file</button>
+        <div class="report-actions">
+          <label class="toggle" title="When on, channel avatars use YouTube video thumbnails (hotlinked from i.ytimg.com). When off, no network requests are made.">
+            <input type="checkbox" id="thumbs-toggle" class="toggle-input" />
+            <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
+            <span class="toggle-label">Thumbnails</span>
+          </label>
+          <button id="reset-btn" class="ghost-btn" type="button">Load a different file</button>
+        </div>
       </div>
 
       <div id="summary" class="summary reveal"></div>

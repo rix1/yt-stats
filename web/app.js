@@ -74,6 +74,31 @@ $("reset-btn").addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
+// ── Thumbnail toggle ──────────────────────────────────────────────────────
+// Off by default to keep the "no network requests" promise. When on,
+// channel avatars hotlink i.ytimg.com (no API key, no JSON handshake,
+// but still outbound image requests). Persisted to localStorage so the
+// user only has to make the choice once.
+const THUMBS_KEY = "yt-stats:thumbs";
+let thumbsEnabled = false;
+try { thumbsEnabled = localStorage.getItem(THUMBS_KEY) === "1"; } catch { /* private mode */ }
+let lastStats = null;
+
+const thumbsToggle = $("thumbs-toggle");
+thumbsToggle.checked = thumbsEnabled;
+thumbsToggle.addEventListener("change", () => {
+  thumbsEnabled = thumbsToggle.checked;
+  try { localStorage.setItem(THUMBS_KEY, thumbsEnabled ? "1" : "0"); } catch { /* private mode */ }
+  if (lastStats) refreshAvatarSections(lastStats);
+});
+
+function refreshAvatarSections(stats) {
+  renderTopChannels("top-channels", stats.topChannels.slice(0, 20));
+  renderTopChannels("top-channels-90", stats.topChannels90d.slice(0, 15));
+  renderRewatched(stats);
+  renderPlayBuckets(stats);
+}
+
 // ── File handling ─────────────────────────────────────────────────────────
 async function handleFile(file) {
   landing.hidden = true;
@@ -99,6 +124,7 @@ async function handleFile(file) {
       el.offsetHeight; // reflow
       el.style.animation = "";
     });
+    lastStats = stats;
     renderReport(stats);
     // Scroll into the report so it's obvious the file loaded — it can
     // otherwise render below the fold and look like nothing happened.
@@ -144,7 +170,7 @@ function avatarEl(name, videoId) {
     class: "avatar",
     style: { background: fallbackBg(name) },
   }, el("span", { class: "avatar-initials" }, initials(name)));
-  if (videoId) {
+  if (thumbsEnabled && videoId) {
     // mqdefault is 320×180 with no letterboxing; default.jpg has black bars.
     const img = el("img", {
       class: "avatar-img",
