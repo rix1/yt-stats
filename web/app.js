@@ -347,9 +347,21 @@ function renderDailyHeatmap(stats) {
   const weeks = 53;
   const grid = el("div", { class: "heatmap", style: { "--weeks": weeks } });
 
+  // Anchor on the more recent of (today, last entry) so an old dataset
+  // (e.g. the bundled 2022 example) still produces a populated grid.
+  // `past` below uses the same anchor so days after it stay "empty".
   const today = new Date(); today.setHours(0, 0, 0, 0);
-  const start = new Date(today);
+  const lastEntry = new Date(stats.summary.last); lastEntry.setHours(0, 0, 0, 0);
+  const anchor = lastEntry < today ? lastEntry : today;
+  const start = new Date(anchor);
   start.setDate(start.getDate() - (weeks * 7 - 1) - start.getDay());
+
+  const sub = $("heatmap-sub");
+  if (sub) {
+    sub.textContent = anchor < today
+      ? `The 53 weeks ending ${FORMAT.niceDate(anchor)}. Each square is a day.`
+      : "Last 53 weeks. Each square is a day.";
+  }
 
   // Month label row
   grid.appendChild(el("div", { class: "heatmap-month-label" }, ""));
@@ -373,7 +385,7 @@ function renderDailyHeatmap(stats) {
     for (let w = 0; w < weeks; w++) {
       const day = new Date(start);
       day.setDate(start.getDate() + w * 7 + d);
-      const past = day <= today;
+      const past = day <= anchor;
       const k = FORMAT.isoDate(day);
       const v = past ? (stats.daily.byDate.get(k) ?? 0) : -1;
       if (v > max) max = v;
