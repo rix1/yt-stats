@@ -108,6 +108,11 @@ code {
     font-weight: 700;
     color: var(--text);
 }
+.nav > nav {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
 .nav-link {
     font-size: 13.5px;
     color: var(--text-2);
@@ -116,6 +121,12 @@ code {
 .nav-link:hover {
     color: var(--text);
 }
+.nav-icon {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-2);
+}
+.nav-icon:hover { color: var(--text); }
 
 /* =========================================================================
    Landing
