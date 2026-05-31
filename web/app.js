@@ -99,43 +99,64 @@ function refreshAvatarSections(stats) {
   renderPlayBuckets(stats);
 }
 
+// ── Example data ──────────────────────────────────────────────────────────
+// One deliberate network request when the user clicks "see an example" —
+// fetches a stripped 2022 subset of a real history. Same pipeline as a
+// dropped file afterwards.
+$("example-link").addEventListener("click", async (e) => {
+  e.preventDefault();
+  landing.hidden = true;
+  loading.hidden = false;
+  loadingText.textContent = "Loading example…";
+  try {
+    const res = await fetch("./example.json");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    await processHistoryText(text);
+  } catch (err) {
+    loading.hidden = true;
+    landing.hidden = false;
+    alert("Couldn't load the example.\n\n" + (err?.message ?? err));
+  }
+});
+
 // ── File handling ─────────────────────────────────────────────────────────
 async function handleFile(file) {
   landing.hidden = true;
   loading.hidden = false;
   loadingText.textContent = "Reading file…";
-
   try {
     const text = await file.text();
-    loadingText.textContent = "Parsing JSON…";
-    await raf();
-    const raw = JSON.parse(text);
-
-    loadingText.textContent = "Crunching numbers…";
-    await raf();
-    const { watches, skippedMusic, skippedNoTime } = parseEntries(raw);
-    const stats = computeStats(watches, { skippedMusic, skippedNoTime });
-
-    loading.hidden = true;
-    report.hidden = false;
-    // re-trigger reveal animations
-    report.querySelectorAll(".reveal").forEach((el) => {
-      el.style.animation = "none";
-      el.offsetHeight; // reflow
-      el.style.animation = "";
-    });
-    lastStats = stats;
-    renderReport(stats);
-    // Scroll into the report so it's obvious the file loaded — it can
-    // otherwise render below the fold and look like nothing happened.
-    requestAnimationFrame(() => {
-      report.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    await processHistoryText(text);
   } catch (err) {
     loading.hidden = true;
     landing.hidden = false;
     alert("Couldn't parse that file.\n\nMake sure it's the watch-history.json from your Google Takeout.\n\n" + (err?.message ?? err));
   }
+}
+
+async function processHistoryText(text) {
+  loadingText.textContent = "Parsing JSON…";
+  await raf();
+  const raw = JSON.parse(text);
+
+  loadingText.textContent = "Crunching numbers…";
+  await raf();
+  const { watches, skippedMusic, skippedNoTime } = parseEntries(raw);
+  const stats = computeStats(watches, { skippedMusic, skippedNoTime });
+
+  loading.hidden = true;
+  report.hidden = false;
+  report.querySelectorAll(".reveal").forEach((el) => {
+    el.style.animation = "none";
+    el.offsetHeight; // reflow
+    el.style.animation = "";
+  });
+  lastStats = stats;
+  renderReport(stats);
+  requestAnimationFrame(() => {
+    report.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 }
 
 const raf = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
