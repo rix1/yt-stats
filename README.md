@@ -1,4 +1,6 @@
-# watch-history
+# YT stats &middot; <small>Spotify Wrapped, but for YouTube</small>
+
+![Screenshot of the report](./screenshot.jpg)
 
 **Spotify Wrapped, but for YouTube.** Drop your `watch-history.json` and get a personal report: years of viewing trends, a daily heatmap, top channels (all-time and last 90 days), most-rewatched videos, hour-of-day patterns, streaks. All of it rendered in your browser — or in your terminal — without a single network request.
 
