@@ -12,11 +12,11 @@ This is the whole pitch:
 
 - **No server.** The web app is static HTML/CSS/JS.
 - **No telemetry, no analytics, no cookies, no CDN fonts.**
-- **No network requests** while the app runs — open the Network tab and watch.
+- **No network requests by default** while the app runs — open the Network tab and watch. The one exception is opt-in: flip the *Thumbnails* switch in the report header and channel avatars hotlink `i.ytimg.com` (no API, no key — just images).
 - **Parsing happens locally** via the browser's File API.
-- **Refresh = gone.** Nothing is persisted.
+- **Refresh = gone.** Nothing is persisted (toggle preference excepted, in `localStorage`).
 
-Channel avatars are deterministic gradients hashed from the channel name — never fetched from YouTube.
+By default channel avatars are deterministic gradients hashed from the channel name.
 
 ## Get your watch-history.json
 
@@ -30,13 +30,14 @@ The web app has the same walkthrough at `/about.html#takeout`.
 
 ## Web app
 
+Hosted at [yt-stats.rix1.dev](https://yt-stats.rix1.dev). To run it locally:
+
 ```sh
-cd web
 python3 -m http.server 4173
 # open http://localhost:4173
 ```
 
-Drop your `watch-history.json` on the page. The report renders in a few hundred ms.
+Drop your `watch-history.json` on the page — or click *See an example report* to load a 500-entry 2022 sample without uploading anything. The report renders in a few hundred ms.
 
 ## CLI
 
@@ -69,14 +70,19 @@ Times are local. Ads, posts, and YouTube Music entries are filtered out.
 ## Project layout
 
 ```
-core.js       Pure stats engine — runs in Deno and the browser
-cli.js        ANSI/ASCII renderer for the terminal
-yt-stats.ts   Deno entry point (7 lines, wires core + cli)
-web/          Static web app — index.html, about.html, app.js, styles.css
-              core.js here is a symlink to ../core.js
+core.js         Pure stats engine — runs in Deno and the browser
+cli.js          ANSI/ASCII renderer for the terminal
+yt-stats.ts     Deno entry point (7 lines, wires core + cli)
+index.html      Static web app — landing + report
+about.html      Privacy and Takeout walkthrough
+app.js          Browser renderer — DOM, drag-and-drop, master-detail
+styles.css      Dark theme
+example.json    Stride-sampled 2022 subset used by "See an example"
 ```
 
-`core.js` has no dependencies and no I/O. `cli.js` writes ANSI to stdout. `web/app.js` renders into the DOM. Swap renderers freely.
+`core.js` has no dependencies and no I/O. `cli.js` writes ANSI to stdout. `app.js` renders into the DOM. Swap renderers freely.
+
+Everything lives at the repo root so GitHub Pages can serve it directly.
 
 ## License
 
